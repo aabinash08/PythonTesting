@@ -1,0 +1,18 @@
+[
+  {
+    "username"    : "laura.taylor1234@example.com",
+    "password" : "test123",
+    "validation" : "valid"
+  },
+
+  {
+    "username"    : "aabinash08@gmail.com",
+    "password" : "Blueblack@123",
+    "validation" : "invalid"
+  },
+  {
+    "username"    : "",
+    "password" : "",
+    "validation" : "invalid"
+  }
+]

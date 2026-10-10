@@ -1,0 +1,4 @@
+username,password,validation
+aabinash08@gmail.com,Blueblack@123,invalid
+validusername@gmail.com,wrongpassword,invalid
+laura.taylor1234@example.com,test123,valid

@@ -1,0 +1,19 @@
+import pytest
+
+from playwright.sync_api import Playwright,Page,expect
+
+def test_videorecorder(playwright: Playwright):
+   browser =  playwright.chromium.launch(headless=False)
+   context= browser.new_context(
+       record_video_dir = "videos/",
+       record_video_size = {"width":1024,"height":768}
+
+   )
+   page = context.new_page()
+   page.goto("https://demoblaze.com/index.html")
+   page.locator("#login2").click()
+   page.locator("#loginusername").fill("pavnol")
+   page.locator("#loginpassword").fill("test@123")
+   page.locator("button[onclick='logIn()']").click()
+   page.wait_for_timeout(5000)
+

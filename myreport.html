@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">myreport.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+    
+  </head>
+  <body>
+    <h1 id="title">myreport.html</h1>
+    <p>Report generated on 03-Oct-2026 at 16:33:35 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">2 tests took 00:00:13.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" >
+            <span class="failed">1 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">1 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.14.0&#34;, &#34;Platform&#34;: &#34;Windows-11-10.0.26200-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;9.1.1&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;allure-pytest&#34;: &#34;2.16.2&#34;, &#34;base-url&#34;: &#34;2.1.0&#34;, &#34;html&#34;: &#34;4.2.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;playwright&#34;: &#34;0.8.0&#34;, &#34;rerunfailures&#34;: &#34;16.7&#34;}, &#34;Base URL&#34;: &#34;&#34;}, &#34;tests&#34;: {&#34;test_sample.py::test_google_search[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;test_sample.py::test_google_search[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;test_sample.py::test_google_search[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;test_sample.py::test_bing_search[chromium]&#34;: [{&#34;extras&#34;: [{&#34;name&#34;: &#34;Image&#34;, &#34;format_type&#34;: &#34;image&#34;, &#34;content&#34;: &#34;screenshots\\test-sample-py-test-bing-search-chromium.png&#34;, &#34;mime_type&#34;: &#34;image/png&#34;, &#34;extension&#34;: &#34;png&#34;}], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;test_sample.py::test_bing_search[chromium]&#34;, &#34;duration&#34;: &#34;00:00:08&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;test_sample.py::test_bing_search[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:08&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;page = &amp;lt;Page url=&amp;#x27;https://www.bing.com/&amp;#x27;&amp;gt;\n\n    def test_bing_search(page:Page):\n        page.goto(&amp;quot;https://www.bing.com/&amp;quot;)\n&amp;gt;       expect(page).to_have_title(&amp;quot;Bing123&amp;quot;)  # Intentionally failed\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       AssertionError: Page title expected to be &amp;#x27;Bing123&amp;#x27;\nE       Actual value: Search - Microsoft Bing \nE       Call log:\nE         - Expect &amp;quot;to_have_title&amp;quot; with timeout 5000ms\nE           12 \u00d7 unexpected value &amp;quot;Search - Microsoft Bing&amp;quot;\nE       \nE       Aria snapshot:\nE       - main:\nE         - heading &amp;quot;Microsoft Logo Image&amp;quot; [level=1]:\nE           - img &amp;quot;Microsoft Logo Image&amp;quot;\nE         - navigation:\nE           - menubar:\nE             - menuitem &amp;quot;Copilot&amp;quot;:\nE               - link &amp;quot;Copilot&amp;quot;:\nE                 - /url: /chat?FORM=hpcodx&amp;amp;intent=bing\nE             - menuitem &amp;quot;Images&amp;quot;:\nE               - link &amp;quot;Images&amp;quot;:\nE                 - /url: /images?FORM=Z9LH\nE             - menuitem &amp;quot;Videos&amp;quot;:\nE               - link &amp;quot;Videos&amp;quot;:\nE                 - /url: /videos?FORM=Z9LH1\nE             - menuitem &amp;quot;Shopping&amp;quot;:\nE               - link &amp;quot;Shopping&amp;quot;:\nE                 - /url: /shop?FORM=Z9LHS4\nE             - menuitem &amp;quot;Maps&amp;quot;:\nE               - link &amp;quot;Maps&amp;quot;:\nE                 - /url: /maps?FORM=Z9LH2\nE             - menuitem &amp;quot;News&amp;quot;:\nE               - link &amp;quot;News&amp;quot;:\nE                 - /url: /news/search?q=Top+stories&amp;amp;nvaug=%5bNewsVertical+Category%3d%22rt_MaxClass%22%5d&amp;amp;FORM=Z9LH3\nE             - menuitem &amp;quot;. . . More&amp;quot;:\nE               - text: . . .\nE               - button &amp;quot;More&amp;quot;\nE         - complementary &amp;quot;Account Rewards and Preferences&amp;quot;:\nE           - link &amp;quot;Sign in Sign in&amp;quot;:\nE             - /url: javascript:void(0)\nE             - text: Sign in\nE           - button &amp;quot;Microsoft Rewards&amp;quot;:\nE             - text: Rewards\nE             - img\nE           - button &amp;quot;Mobile&amp;quot;:\nE             - text: Mobile\nE             - img\nE           - button &amp;quot;Settings and quick links&amp;quot;\nE         - search:\nE           - combobox &amp;quot;Enter your search here - Search suggestions will show as you type&amp;quot;:\nE             - status\nE           - button &amp;quot;Search using voice&amp;quot;:\nE             - img\nE           - button &amp;quot;Search using an image&amp;quot;\nE           - link &amp;quot;Open Copilot&amp;quot;:\nE             - /url: /chat?FORM=hpcodx&amp;amp;intent=bing\nE           - group &amp;quot;Languages:&amp;quot;:\nE             - text: &amp;quot;Languages:&amp;quot;\nE             - link &amp;quot;Hindi&amp;quot;:\nE               - /url: /?setlang=hi&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0939\u093f\u0902\u0926\u0940\nE             - link &amp;quot;Bangla (India)&amp;quot;:\nE               - /url: /?setlang=bn&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u09ac\u09be\u0982\u09b2\u09be\nE             - link &amp;quot;Urdu (Pakistan)&amp;quot;:\nE               - /url: /?setlang=ur&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0627\u0631\u062f\u0648\nE             - link &amp;quot;Punjabi (Gurmukhi)&amp;quot;:\nE               - /url: /?setlang=pa-guru&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40\nE             - link &amp;quot;Marathi&amp;quot;:\nE               - /url: /?setlang=mr&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u092e\u0930\u093e\u0920\u0940\nE             - link &amp;quot;Telugu&amp;quot;:\nE               - /url: /?setlang=te&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0c24\u0c46\u0c32\u0c41\u0c17\u0c41\nE             - link &amp;quot;Tamil&amp;quot;:\nE               - /url: /?setlang=ta&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0ba4\u0bae\u0bbf\u0bb4\u0bcd\nE             - link &amp;quot;Kannada&amp;quot;:\nE               - /url: /?setlang=kn&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0c95\u0ca8\u0ccd\u0ca8\u0ca1\nE             - link &amp;quot;Gujarati&amp;quot;:\nE               - /url: /?setlang=gu&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0\nE             - link &amp;quot;Malayalam (India)&amp;quot;:\nE               - /url: /?setlang=ml&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0d2e\u0d32\u0d2f\u0d3e\u0d33\u0d02\nE             - link &amp;quot;Odia (India)&amp;quot;:\nE               - /url: /?setlang=or&amp;amp;cc=in&amp;amp;cc=IN\nE               - text: \u0b13\u0b5c\u0b3f\u0b06\nE         - link &amp;quot;Image creator&amp;quot;:\nE           - /url: /images/create/ai-image-generator?bicsource=hp&amp;amp;FORM=bicbhp\nE         - link &amp;quot;Text creator&amp;quot;:\nE           - /url: /search?q=bing ai writing&amp;amp;FORM=btcbhp\nE       - dialog &amp;quot;Bing homepage quiz Which Alaskan park contains Silver Salmon Creek?&amp;quot;:\nE         - group &amp;quot;Bing homepage quiz Which Alaskan park contains Silver Salmon Creek?&amp;quot;:\nE           - text: Bing homepage quiz Which Alaskan park contains Silver Salmon Creek?\nE           - list:\nE             - listitem:\nE               - &amp;#x27;link &amp;quot;Answer: A, Lake Clark, 1 of 3&amp;quot;&amp;#x27;:\nE                 - /url: /search?q=Lake+Clark&amp;amp;filters=mgzv3configlist%3A%22BingQA_Quiz_layout%22+IsConversation%3A%22True%22+btrequestsource%3A%22homepage%22+WQOskey%3A%22HPQuiz_20261003_GrizzlySwim%22+WQId%3A%221%22+WQQI%3A%220%22+WQCI%3A%220%22+UserChoices%3A%220%22+ShowTimesTaskPaneTrigger%3A%22false%22+WQSCORE%3A%221%22&amp;amp;FORM=HPQUIZ\nE                 - text: A Lake Clark\nE             - listitem:\nE               - &amp;#x27;link &amp;quot;Answer: B, Denali, 2 of 3&amp;quot;&amp;#x27;:\nE                 - /url: /search?q=Lake+Clark&amp;amp;filters=mgzv3configlist%3A%22BingQA_Quiz_layout%22+IsConversation%3A%22True%22+btrequestsource%3A%22homepage%22+WQOskey%3A%22HPQuiz_20261003_GrizzlySwim%22+WQId%3A%221%22+WQQI%3A%220%22+WQCI%3A%221%22+UserChoices%3A%221%22+ShowTimesTaskPaneTrigger%3A%22false%22+WQSCORE%3A%220%22&amp;amp;FORM=HPQUIZ\nE                 - text: B Denali\nE             - listitem:\nE               - &amp;#x27;link &amp;quot;Answer: C, Kenai Fjords, 3 of 3&amp;quot;&amp;#x27;:\nE                 - /url: /search?q=Lake+Clark&amp;amp;filters=mgzv3configlist%3A%22BingQA_Quiz_layout%22+IsConversation%3A%22True%22+btrequestsource%3A%22homepage%22+WQOskey%3A%22HPQuiz_20261003_GrizzlySwim%22+WQId%3A%221%22+WQQI%3A%220%22+WQCI%3A%222%22+UserChoices%3A%222%22+ShowTimesTaskPaneTrigger%3A%22false%22+WQSCORE%3A%220%22&amp;amp;FORM=HPQUIZ\nE                 - text: C Kenai Fjords\nE       - link &amp;quot;Get the Bing Wallpaper app&amp;quot;:\nE         - /url: https://go.microsoft.com/fwlink/?linkid=2127455\nE       - &amp;#x27;heading &amp;quot;Image of the day: Brown bear in Silver Salmon Creek, Lake Clark National Park and Preserve, Alaska, United States&amp;quot; [level=3]&amp;#x27;:\nE         - &amp;#x27;link &amp;quot;Image of the day: Brown bear in Silver Salmon Creek, Lake Clark National Park and Preserve, Alaska, United States&amp;quot;&amp;#x27;:\nE           - /url: /search?q=Brown+bear&amp;amp;form=hpcapt&amp;amp;filters=HpDate:&amp;quot;20261002_1830&amp;quot;+mgzv3configlist:&amp;quot;BingQA_Encyclopedia_Layout&amp;quot;\nE           - text: Brown bear in Silver Salmon Creek, Lake Clark National Park and Preserve, Alaska, United States\nE       - text: \u00a9 Danny Green/Nature Picture Library\nE       - list:\nE         - listitem:\nE           - button &amp;quot;Download this image. Use of this image is restricted to wallpaper only.&amp;quot;\nE       - link &amp;quot;Catch, eat, repeat&amp;quot;:\nE         - /url: /search?q=Brown+bear&amp;amp;form=hpcapt&amp;amp;filters=HpDate:&amp;quot;20261002_1830&amp;quot;+mgzv3configlist:&amp;quot;BingQA_Encyclopedia_Layout&amp;quot;\nE         - heading &amp;quot;Catch, eat, repeat&amp;quot; [level=2]\nE       - status\nE       - button &amp;quot;Previous image&amp;quot;\nE       - button &amp;quot;Next image&amp;quot; [disabled]\nE       - button &amp;quot;Feedback&amp;quot;:\nE         - img\nE         - text: Feedback\nE       - region &amp;quot;Trending on Bing&amp;quot;:\nE         - status\nE         - button &amp;quot;Toggle feed area position&amp;quot; [expanded]\nE         - button &amp;quot;Previous news&amp;quot; [disabled]\nE         - button &amp;quot;More news&amp;quot;\nE         - list:\nE           - listitem:\nE             - list:\nE               - listitem:\nE                 - link &amp;quot;Modi\u2019s paralysis is visible now more than ever \u00a9 The Wire India&amp;quot;:\nE                   - /url: /search?q=Modi%e2%80%99s+paralysis+is+visible+now+more+than+ever&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_04D283015CBE603D1C3864EC6EE7DF61%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%220%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Modi\u2019s paralysis is visible now more than ever&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The Wire India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/modi-s-paralysis-is-visible-now-more-than-ever/ar-AA2dsA6h?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Watch | Rhiya Ahir 2.0? Woman stops bus at Delhi Jantar Mantar protest, sparking viral online debate \u00a9 The Daily Jagran&amp;quot;:\nE                   - /url: /search?q=Watch+%7c+Rhiya+Ahir+2.0%3f+Woman+stops+bus+at+Delhi+Jantar+Mantar+protest%2c+sparking+viral+online+debate&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_849F2768A0165A93B71EA50314D7F79F%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%221%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Watch | Rhiya Ahir 2.0? Woman stops bus at Delhi Jantar Mantar protest, sparking viral online debate&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The Daily Jagran&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/watch-rhiya-ahir-2-0-woman-stops-bus-at-delhi-jantar-mantar-protest-sparking-viral-online-debate/ar-AA2dsE8i?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Priyanka Kakkar quits AAP for Congress with stinging parting shot: &amp;#x27;&amp;#x27;Could no longer defend the indefensible&amp;#x27;&amp;#x27; \u00a9 The Statesman&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Priyanka+Kakkar+quits+AAP+for+Congress+with+stinging+parting+shot%3a+%27Could+no+longer+defend+the+indefensible%27&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_86A981E355BB1FD09F3B11397B3FE8CB%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%222%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Priyanka Kakkar quits AAP for Congress with stinging parting shot: &amp;#x27;&amp;#x27;Could no longer defend the indefensible&amp;#x27;&amp;#x27;&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 The Statesman&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/priyanka-kakkar-quits-aap-for-congress-with-stinging-parting-shot-could-no-longer-defend-the-indefensible/ar-AA2dtzOB?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Pacific to pacify ties? Washington sends US admiral to India as relations face strain \u00a9 The Times of India&amp;quot;:\nE                   - /url: /search?q=Pacific+to+pacify+ties%3f+Washington+sends+US+admiral+to+India+as+relations+face+strain&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_F5F9267203BA4C7D7C64F2FF9C7B0B03%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%223%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Pacific to pacify ties? Washington sends US admiral to India as relations face strain&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The Times of India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/pacific-to-pacify-ties-washington-sends-us-admiral-to-india-as-relations-face-strain/ar-AA2dswtd?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Medical student checks into Hyderabad hotel with friend, found dead 2 days later \u00a9 India Today&amp;quot;:\nE                   - /url: /search?q=Medical+student+checks+into+Hyderabad+hotel+with+friend%2c+found+dead+2+days+later&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_4E0CCE92903999C340C3F3759F9BDDB3%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%224%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Medical student checks into Hyderabad hotel with friend, found dead 2 days later&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 India Today&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/medical-student-checks-into-hyderabad-hotel-with-friend-found-dead-2-days-later/ar-AA2dty2N?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Jason Sanjay reacts to Thalapathy Vijay resemblance edits \u00a9 Entertainment Times&amp;quot;:\nE                   - /url: /search?q=Jason+Sanjay+reacts+to+Thalapathy+Vijay+resemblance+edits&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_674F3475ADEAB2A7A94DD5CDCF860019%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%225%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Jason Sanjay reacts to Thalapathy Vijay resemblance edits&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 Entertainment Times&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/entertainment/celebrities/jason-sanjay-reacts-to-thalapathy-vijay-resemblance-edits/ar-AA2dtiCP?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Bag-swap ganja smuggling foiled: Customs, DRI nab 4 flyers; CCTV tracks tag swap plot \u00a9 The Times of India&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Bag-swap+ganja+smuggling+foiled%3a+Customs%2c+DRI+nab+4+flyers%3b+CCTV+tracks+tag+swap+plot&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_DB1D4035A142CB8838B7880DA114BBB8%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%226%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Bag-swap ganja smuggling foiled: Customs, DRI nab 4 flyers; CCTV tracks tag swap plot&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 The Times of India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/bag-swap-ganja-smuggling-foiled-customs-dri-nab-4-flyers-cctv-tracks-tag-swap-plot/ar-AA2dqyAg?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Injury scare for Vaibhav Sooryavanshi: 15-year-old leaves field vs Pakistan \u00a9 News18&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Injury+scare+for+Vaibhav+Sooryavanshi%3a+15-year-old+leaves+field+vs+Pakistan&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_48A7BDBEFBF0B91E8EB0146E80BC0F9D%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%227%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Injury scare for Vaibhav Sooryavanshi: 15-year-old leaves field vs Pakistan&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 News18&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/sports/cricket/injury-scare-for-vaibhav-sooryavanshi-15-year-old-leaves-field-vs-pakistan/ar-AA2dtpgK?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;G7 nations agree to release 100 million barrels of oil, including diesel, a boost for Trump \u00a9 The Economic Times&amp;quot;:\nE                   - /url: /search?q=G7+nations+agree+to+release+100+million+barrels+of+oil%2c+including+diesel%2c+a+boost+for+Trump&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_A3CD8F436CA560FC8F3AC840281591AD%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%228%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;G7 nations agree to release 100 million barrels of oil, including diesel, a boost for Trump&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The Economic Times&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/g7-nations-agree-to-release-100-million-barrels-of-oil-including-diesel-a-boost-for-trump/ar-AA2dqU1k?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Punjab Police nab 9 after LPU riots; over 40 suspects traced \u00a9 The Times of India&amp;quot;:\nE                   - /url: /search?q=Punjab+Police+nab+9+after+LPU+riots%3b+over+40+suspects+traced&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_949B97E962B9FD5FB56BDC5C20977C52%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%229%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Punjab Police nab 9 after LPU riots; over 40 suspects traced&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The Times of India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/punjab-police-nab-9-after-lpu-riots-over-40-suspects-traced/ar-AA2drsnb?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Chris Gayle&amp;#x27;s record falls as Abhishek Sharma goes berserk against Pakistan \u00a9 NDTV Sports&amp;quot;:\nE                   - /url: /search?q=Chris+Gayle%27s+record+falls+as+Abhishek+Sharma+goes+berserk+against+Pakistan&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_AE4719559D0F7F4302441E97BF88EBF3%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2210%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Chris Gayle&amp;#x27;s record falls as Abhishek Sharma goes berserk against Pakistan&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 NDTV Sports&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/sports/cricket/chris-gayle-s-record-falls-as-abhishek-sharma-goes-berserk-against-pakistan/ar-AA2dth0J?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;&amp;#x27;&amp;#x27;Let Them Burn&amp;#x27;&amp;#x27;: Komal Rani Swarnkar Slams Divya Khossla, Kashmera Shah For Questioning Her Relationship With Govinda \u00a9 NDTV&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=%27Let+Them+Burn%27%3a+Komal+Rani+Swarnkar+Slams+Divya+Khossla%2c+Kashmera+Shah+For+Questioning+Her+Relationship+With+Govinda&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_8EDE9F39C66155AC2543F0CA57238D6F%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2211%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;&amp;#x27;&amp;#x27;Let Them Burn&amp;#x27;&amp;#x27;: Komal Rani Swarnkar Slams Divya Khossla, Kashmera Shah For Questioning Her Relationship With Govinda&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 NDTV&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/entertainment/celebrities/let-them-burn-komal-rani-swarnkar-slams-divya-khossla-kashmera-shah-for-questioning-her-relationship-with-govinda/ar-AA2dtmot?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;No more Naqvi drama! Jay Shah set to present medals in India-Pakistan Asian Games blockbuster \u00a9 Times Now&amp;quot;:\nE                   - /url: /search?q=No+more+Naqvi+drama!+Jay+Shah+set+to+present+medals+in+India-Pakistan+Asian+Games+blockbuster&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_369AAD0A47557FB5E2D81F780F5D08EF%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2212%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;No more Naqvi drama! Jay Shah set to present medals in India-Pakistan Asian Games blockbuster&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 Times Now&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/sports/cricket/no-more-naqvi-drama-jay-shah-set-to-present-medals-in-india-pakistan-asian-games-blockbuster/ar-AA2drOBt?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Christa Pike execution latest update: &amp;#x27;&amp;#x27;She could be heard crying&amp;#x27;&amp;#x27; - death row inmate on ventilator after two lethal injection doses failed to kill her \u00a9 The Sunday Guardian&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Christa+Pike+execution+latest+update%3a+%27She+could+be+heard+crying%27+-+death+row+inmate+on+ventilator+after+two+lethal+injection+doses+failed+to+kill+her&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_733AF842E3F0B9997C833E468CC2C1F1%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2213%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Christa Pike execution latest update: &amp;#x27;&amp;#x27;She could be heard crying&amp;#x27;&amp;#x27; - death row inmate on ventilator after two lethal injection doses failed to kill her&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 The Sunday Guardian&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/christa-pike-execution-latest-update-she-could-be-heard-crying-death-row-inmate-on-ventilator-after-two-lethal-injection-doses-failed-to-kill-her/ar-AA2drXRr?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Fadnavis, Shelar slam CJP: BJP leaders call EC protest fake narrative; cite Ambedkar\u2019s grammar of anarchy \u00a9 The Times of India&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Fadnavis%2c+Shelar+slam+CJP%3a+BJP+leaders+call+EC+protest+fake+narrative%3b+cite+Ambedkar%e2%80%99s+grammar+of+anarchy&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_0BFCFB06186DF0B45AB0CA2F81A93729%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2214%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Fadnavis, Shelar slam CJP: BJP leaders call EC protest fake narrative; cite Ambedkar\u2019s grammar of anarchy&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 The Times of India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/fadnavis-shelar-slam-cjp-bjp-leaders-call-ec-protest-fake-narrative-cite-ambedkar-s-grammar-of-anarchy/ar-AA2dqtYo?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Six, including mother-in-law, held for strangulating pregnant woman to death in Pudukkottai \u00a9 The New Indian Express&amp;quot;:\nE                   - /url: /search?q=Six%2c+including+mother-in-law%2c+held+for+strangulating+pregnant+woman+to+death+in+Pudukkottai&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_D782D2E3037A501AD4FAFB975A7B2681%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2215%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Six, including mother-in-law, held for strangulating pregnant woman to death in Pudukkottai&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 The New Indian Express&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/six-including-mother-in-law-held-for-strangulating-pregnant-woman-to-death-in-pudukkottai/ar-AA2dt3rE?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Pargat Singh appointed Punjab Congress president, replaces Raja Warring \u00a9 News18&amp;quot;:\nE                   - /url: /search?q=Pargat+Singh+appointed+Punjab+Congress+president%2c+replaces+Raja+Warring&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_E5275BEE2B37C14F0798496F2D4AA58B%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2216%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Pargat Singh appointed Punjab Congress president, replaces Raja Warring&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 News18&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/pargat-singh-appointed-punjab-congress-president-replaces-raja-warring/ar-AA2dtiDQ?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;RS polls: UP minister Rajbhar accepts two of his MLAs will vote for SP \u00a9 Hindustan Times&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=RS+polls%3a+UP+minister+Rajbhar+accepts+two+of+his+MLAs+will+vote+for+SP&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_718EAF38745E8D6A914B971B86EA56FD%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2217%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;RS polls: UP minister Rajbhar accepts two of his MLAs will vote for SP&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 Hindustan Times&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/rs-polls-up-minister-rajbhar-accepts-two-of-his-mlas-will-vote-for-sp/ar-AA2dtnDV?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - link &amp;quot;Full list of records broken by India against Pakistan in Asian Games final \u00a9 Copyright (C) news18.com. All Rights Reserved.&amp;quot;:\nE                   - /url: /search?q=Full+list+of+records+broken+by+India+against+Pakistan+in+Asian+Games+final&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_9B569152D275E42ED5EC0B410C44C96A%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2218%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - heading &amp;quot;Full list of records broken by India against Pakistan in Asian Games final&amp;quot; [level=2]\nE                   - img &amp;quot;\u00a9 Copyright (C) news18.com. All Rights Reserved.&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/sports/cricket/full-list-of-records-broken-by-india-against-pakistan-in-asian-games-final/ar-AA2dsPdB?ocid=TobArticle\nE                     - img\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Texas murder-suicide: US mother kills 4-year-old then shoots self dead after losing custody battle \u00a9 The Times of India&amp;quot;&amp;#x27;:\nE                   - /url: /search?q=Texas+murder-suicide%3a+US+mother+kills+4-year-old+then+shoots+self+dead+after+losing+custody+battle&amp;amp;efirst=0&amp;amp;ecount=50&amp;amp;filters=tnTID%3a%22TOBP2_8076B02CD0762418FFE4D0B1338AFFE8%22+tnVersion%3a%22bed1c07b-2fb6-42b8-972f-d14a23ea18a3%22+Segment%3a%22popularnow.carousel%22+tnCol%3a%2219%22+tnOrder%3a%22ac3b0abc-c085-42d6-b81b-a606520762a9%22&amp;amp;form=HPNN01\nE                   - &amp;#x27;heading &amp;quot;Texas murder-suicide: US mother kills 4-year-old then shoots self dead after losing custody battle&amp;quot; [level=2]&amp;#x27;\nE                   - img &amp;quot;\u00a9 The Times of India&amp;quot;\nE                   - link &amp;quot;Read Article&amp;quot;:\nE                     - /url: https://www.msn.com/en-in/news/other/texas-murder-suicide-us-mother-kills-4-year-old-then-shoots-self-dead-after-losing-custody-battle/ar-AA2dtz40?ocid=TobArticle\nE                     - img\nE       - complementary:\nE         - text: DISCOVER\nE         - main:\nE           - tablist:\nE             - tab &amp;quot;News story&amp;quot; [selected]\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;Sponsored&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;Sponsored&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;Sponsored&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;Sponsored&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE             - tab &amp;quot;News story&amp;quot;\nE           - article &amp;quot;10 life lessons from Neem Karoli Baba to teach your children&amp;quot;:\nE             - text: Moneycontrol\nE             - link &amp;quot;10 life lessons from Neem Karoli Baba to teach your children, Moneycontrol&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/10-life-lessons-from-neem-karoli-baba-to-teach-your-children/ar-AA226b4L\nE               - text: 10 life lessons from Neem Karoli Baba to teach your children\nE             - button &amp;quot;1,400 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;View comments 3 Comment&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/10-life-lessons-from-neem-karoli-baba-to-teach-your-children/ar-AA226b4L#comments\nE               - button &amp;quot;View comments 3 Comment&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article:\nE             - link &amp;quot;Top stories&amp;quot;:\nE               - /url: https://www.msn.com/en-in/channel/topic/Top%20stories/tp-Y_0b495ad3-9beb-45f8-9214-c8e95aa2468f?cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ocid=BingHp01\nE               - heading &amp;quot;Top stories&amp;quot; [level=2]\nE             - button &amp;quot;More options&amp;quot;\nE             - list:\nE               - listitem:\nE                 - link &amp;quot;Breaking ABP - Live 1h Asian Games gold galore! Amit Sehrawat stuns Han Chong Song in freestyle wrestling final&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/sports/wrestling/asian-games-gold-galore-amit-sehrawat-stuns-han-chong-song-in-freestyle-wrestling-final/ar-AA2dtJbi\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Press Trust of India now Flydubai cockpit attack: Co-pilot identified as Omani citizen&amp;quot;&amp;#x27;:\nE                   - /url: https://www.msn.com/en-in/news/other/flydubai-cockpit-attack-co-pilot-identified-as-omani-citizen/ar-AA2dt7bZ\nE               - listitem:\nE                 - &amp;#x27;link &amp;quot;Hindustan Times 1h Gurugram man jumps from 41st floor of posh Noida society, was in monetary distress: Police&amp;quot;&amp;#x27;:\nE                   - /url: https://www.msn.com/en-in/news/other/gurugram-man-jumps-from-41st-floor-of-posh-noida-society-was-in-monetary-distress-police/ar-AA2dtNC0\nE             - button &amp;quot;Previous&amp;quot;\nE             - tablist:\nE               - tab &amp;quot;Page 1&amp;quot; [selected]\nE               - tab &amp;quot;Page 2&amp;quot;\nE               - tab &amp;quot;Page 3&amp;quot;\nE             - button &amp;quot;Next&amp;quot;\nE             - link &amp;quot;See more&amp;quot;:\nE               - /url: https://www.msn.com/en-in/channel/topic/Top%20stories/tp-Y_0b495ad3-9beb-45f8-9214-c8e95aa2468f?cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ocid=BingHp01\nE           - article:\nE             - link &amp;quot;Games&amp;quot;:\nE               - /url: https://www.msn.com/en-in/play?ocid=msedgntp&amp;amp;cgfrom=cg_ntp_sd_cardtitle\nE               - heading &amp;quot;Games&amp;quot; [level=2]\nE             - button &amp;quot;More options&amp;quot;\nE             - list:\nE               - listitem:\nE                 - link &amp;quot;Paper.io 2&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/paperio-2/cg-9p3z21qf167w?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Paper.io 2&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Puzzle Blocks Classic&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/puzzle-blocks-classic/cg-9p95wfwcn97l?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Puzzle Blocks Classic&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Farm Merge Valley&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/farm-merge-valley/cg-9nf2hg8fnlts?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Farm Merge Valley&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;From Nerd to School Popular&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/from-nerd-to-school-popular/cg-9n9nnh0mhfgk?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;From Nerd to School Popular&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Fluffles Bubbles&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/fluffles-bubbles/cg-9ngqf8sr850h?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Fluffles Bubbles&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Fruity Merge&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/fruity-merge/cg-9mxs1l592xgm?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Fruity Merge&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Kick the Buddy&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/kick-the-buddy/cg-9ncz9n76wh8w?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Kick the Buddy&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Fashion Merge&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/fashion-merge/cg-9p7swtssln0g?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Fashion Merge&amp;quot;\nE               - listitem:\nE                 - link &amp;quot;Rooftop Run&amp;quot;:\nE                   - /url: https://www.msn.com/en-in/play/games/rooftop-run/cg-9plgt00f15xs?cgfrom=cg_ntp_sd_cardgameitem&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;ei=3\nE                   - img &amp;quot;Rooftop Run&amp;quot;\nE             - button &amp;quot;Previous&amp;quot;\nE             - tablist:\nE               - tab &amp;quot;Page 1&amp;quot; [selected]\nE               - tab &amp;quot;Page 2&amp;quot;\nE             - button &amp;quot;Next&amp;quot;\nE             - link &amp;quot;Explore more games&amp;quot;:\nE               - /url: https://www.msn.com/en-in/play?ocid=msedgntp&amp;amp;cgfrom=cg_ntp_sd_cardseemore\nE           - article &amp;quot;Want Korean glass skin? These 5 daily habits make all the difference&amp;quot;:\nE             - text: The Times of India\nE             - link &amp;quot;Want Korean glass skin? These 5 daily habits make all the difference, The Times of India&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/want-korean-glass-skin-these-5-daily-habits-make-all-the-difference/ss-AA29rVdI\nE               - text: Want Korean glass skin? These 5 daily habits make all the difference\nE             - button &amp;quot;2,720 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;View comments 4 Comment&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/want-korean-glass-skin-these-5-daily-habits-make-all-the-difference/ss-AA29rVdI#comments\nE               - button &amp;quot;View comments 4 Comment&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article\nE           - &amp;#x27;article &amp;quot;Drishyam 3 collection day 1 early report: Ajay Devgn delivers his biggest opener ever&amp;quot;&amp;#x27;:\nE             - text: The Indian Express 20h\nE             - &amp;#x27;link &amp;quot;Drishyam 3 collection day 1 early report: Ajay Devgn delivers his biggest opener ever, The Indian Express&amp;quot;&amp;#x27;:\nE               - /url: https://www.msn.com/en-in/entertainment/movies/drishyam-3-collection-day-1-early-report-ajay-devgn-delivers-his-biggest-opener-ever/ar-AA2dqSJQ\nE               - text: &amp;quot;Drishyam 3 collection day 1 early report: Ajay Devgn delivers his biggest opener ever&amp;quot;\nE             - button &amp;quot;21 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/movies/drishyam-3-collection-day-1-early-report-ajay-devgn-delivers-his-biggest-opener-ever/ar-AA2dqSJQ#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;He tried 50 ways to use chocolate and one idea changed everything&amp;quot;:\nE             - text: Nick DiGiovanni\nE             - link &amp;quot;He tried 50 ways to use chocolate and one idea changed everything, Nick DiGiovanni&amp;quot;:\nE               - /url: https://www.msn.com/en-in/food-and-drink/recipes/he-tried-50-ways-to-use-chocolate-and-one-idea-changed-everything/vi-AA26lTVd\nE               - text: He tried 50 ways to use chocolate and one idea changed everything\nE             - button &amp;quot;322 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/food-and-drink/recipes/he-tried-50-ways-to-use-chocolate-and-one-idea-changed-everything/vi-AA26lTVd#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article\nE           - article:\nE             - link &amp;quot;Chhindwara&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/forecast/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;content=AQICard_wxaqi\nE               - heading &amp;quot;Chhindwara&amp;quot; [level=2]\nE             - button &amp;quot;My location&amp;quot;\nE             - button &amp;quot;More options&amp;quot;\nE             - link &amp;quot;Mostly sunny&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/forecast/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;content=AQICard_wxaqi\nE               - img &amp;quot;Mostly sunny&amp;quot;\nE             - link &amp;quot;30\u00b0C&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/forecast/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;content=AQICard_wxaqi\nE               - text: \u200e30\u200e \u200e\u00b0C\u200e\nE             - link &amp;quot;Moderate air quality&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/forecast/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;fcsttab=airquality\nE             - link &amp;quot;See full forecast&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/forecast/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;fcsttab=airquality\nE               - img &amp;quot;arrow&amp;quot;\nE             - link &amp;quot;Larger map&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/maps/airquality/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;content=AQICard_wxaqi&amp;amp;zoom=8\nE             - link &amp;quot;Check global air quality&amp;quot;:\nE               - /url: https://www.msn.com/en-in/weather/maps/airquality/in-Chhindwara,Madhya-Pradesh?loc=eyJsIjoiQ2hoaW5kd2FyYSIsInIiOiJNYWRoeWEgUHJhZGVzaCIsImMiOiJJbmRpYSIsImkiOiJJTiIsImciOiJlbi1pbiIsIngiOjc5LjAwMDk5OTQ1MDY4MzYsInkiOjIxLjk5Njk5OTc0MDYwMDU4Nn0%3D&amp;amp;weadegreetype=C&amp;amp;ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214&amp;amp;content=AQICard_wxaqi&amp;amp;zoom=8\nE             - button &amp;quot;See full forecast&amp;quot;\nE           - article:\nE             - link &amp;quot;Top Engaging News&amp;quot;:\nE               - /url: https://www.msn.com/en-in/channel/topic/Top Engaging News/tp-Y_42e62c1c-32a7-462e-a6b0-8a718bfe473d?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE               - heading &amp;quot;Top Engaging News&amp;quot; [level=2]\nE             - button &amp;quot;More options&amp;quot;\nE             - link &amp;quot;News18 2 Comments Jim Carrey marries for the 3rd time at 64, ties knot with 32-year-old girlfriend Min Ah&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/celebrities/jim-carrey-marries-for-the-3rd-time-at-64-ties-knot-with-32-year-old-girlfriend-min-ah/ar-AA2dk8bG\nE               - text: News18\nE               - link &amp;quot;2 Comments&amp;quot;:\nE                 - /url: https://www.msn.com/en-in/entertainment/celebrities/jim-carrey-marries-for-the-3rd-time-at-64-ties-knot-with-32-year-old-girlfriend-min-ah/ar-AA2dk8bG#comments\nE                 - paragraph: &amp;quot;2&amp;quot;\nE               - paragraph: Jim Carrey marries for the 3rd time at 64, ties knot with 32-year-old girlfriend Min Ah\nE             - &amp;#x27;link &amp;quot;Hindustan Times 1 Comments Australians are laid-back: Indian man compares public holidays in Australia and India, internet reacts&amp;quot;&amp;#x27;:\nE               - /url: https://www.msn.com/en-in/news/other/australians-are-laid-back-indian-man-compares-public-holidays-in-australia-and-india-internet-reacts/ar-AA2dmmhs\nE               - text: Hindustan Times\nE               - link &amp;quot;1 Comments&amp;quot;:\nE                 - /url: https://www.msn.com/en-in/news/other/australians-are-laid-back-indian-man-compares-public-holidays-in-australia-and-india-internet-reacts/ar-AA2dmmhs#comments\nE                 - paragraph: &amp;quot;1&amp;quot;\nE               - paragraph: &amp;quot;Australians are laid-back: Indian man compares public holidays in Australia and India, internet reacts&amp;quot;\nE             - link &amp;quot;ABP - Live 1 Comments Washington Sundar out of India T20I squad, BCCI names surprise replacement&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/washington-sundar-out-of-india-t20i-squad-bcci-names-surprise-replacement/ar-AA2dltlt\nE               - text: ABP - Live\nE               - link &amp;quot;1 Comments&amp;quot;:\nE                 - /url: https://www.msn.com/en-in/sports/cricket/washington-sundar-out-of-india-t20i-squad-bcci-names-surprise-replacement/ar-AA2dltlt#comments\nE                 - paragraph: &amp;quot;1&amp;quot;\nE               - paragraph: Washington Sundar out of India T20I squad, BCCI names surprise replacement\nE             - button &amp;quot;Previous&amp;quot;\nE             - tablist:\nE               - tab &amp;quot;Page 1&amp;quot; [selected]\nE               - tab &amp;quot;Page 2&amp;quot;\nE               - tab &amp;quot;Page 3&amp;quot;\nE             - button &amp;quot;Next&amp;quot;\nE             - link &amp;quot;See more&amp;quot;:\nE               - /url: https://www.msn.com/en-in/channel/topic/Top Engaging News/tp-Y_42e62c1c-32a7-462e-a6b0-8a718bfe473d?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE           - article\nE           - article &amp;quot;50 Indian baby names with beautiful hidden meanings&amp;quot;:\nE             - text: Times Now\nE             - link &amp;quot;50 Indian baby names with beautiful hidden meanings, Times Now&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/50-indian-baby-names-with-beautiful-hidden-meanings/ar-AA28FTJy\nE               - text: 50 Indian baby names with beautiful hidden meanings\nE             - button &amp;quot;684 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;View comments 2 Comment&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/50-indian-baby-names-with-beautiful-hidden-meanings/ar-AA28FTJy#comments\nE               - button &amp;quot;View comments 2 Comment&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article:\nE             - img &amp;quot;Watchlist suggestions&amp;quot;\nE             - link &amp;quot;Watchlist suggestions&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?ocid=BingHp01\nE               - heading &amp;quot;Watchlist suggestions&amp;quot; [level=2]\nE             - button &amp;quot;More options&amp;quot;\nE             - link &amp;quot;24K Gold (10 Grams) - Indian Rupee XAUINR \u200e+0.69%\u200e 144496&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?id=cejq77&amp;amp;ocid=BingHp01\nE               - text: 24K Gold (10 Grams) - Indian Rupee XAUINR \u200e+0.69%\u200e 144496\nE               - button &amp;quot;Add to watchlist&amp;quot;:\nE                 - img\nE             - link &amp;quot;Silver Silver \u200e-1.24%\u200e 60.42&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?id=auvwr7&amp;amp;ocid=BingHp01\nE               - text: Silver Silver \u200e-1.24%\u200e 60.42\nE               - button &amp;quot;Add to watchlist&amp;quot;:\nE                 - img\nE             - link &amp;quot;ITC Ltd ITC \u200e-2.61%\u200e 255.90&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?id=ahie2w&amp;amp;ocid=BingHp01\nE               - text: ITC Ltd ITC \u200e-2.61%\u200e 255.90\nE               - button &amp;quot;Add to watchlist&amp;quot;:\nE                 - img\nE             - link &amp;quot;Citigroup Inc. C \u200e+1.18%\u200e 128.50&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?id=a1p3ww&amp;amp;ocid=BingHp01\nE               - text: Citigroup Inc. C \u200e+1.18%\u200e 128.50\nE               - button &amp;quot;Add to watchlist&amp;quot;:\nE                 - img\nE             - link &amp;quot;Tata Steel Ltd TATASTEEL \u200e-3.42%\u200e 178.00&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?id=ahkaa2&amp;amp;ocid=BingHp01\nE               - text: Tata Steel Ltd TATASTEEL \u200e-3.42%\u200e 178.00\nE               - button &amp;quot;Add to watchlist&amp;quot;:\nE                 - img\nE             - button &amp;quot;Previous&amp;quot;\nE             - tablist:\nE               - tab &amp;quot;Page 1&amp;quot; [selected]\nE               - tab &amp;quot;Page 2&amp;quot;\nE               - tab &amp;quot;Page 3&amp;quot;\nE               - tab &amp;quot;Page 4&amp;quot;\nE             - button &amp;quot;Next&amp;quot;\nE             - link &amp;quot;See watchlist suggestions&amp;quot;:\nE               - /url: https://www.msn.com/en-in/money/watchlist?ocid=BingHp01\nE           - article &amp;quot;He finally got onto Japan\u2019s lottery-only luxury train then saw why just 34 passengers are allowed&amp;quot;:\nE             - text: Trek Trendy 1w\nE             - link &amp;quot;He finally got onto Japan\u2019s lottery-only luxury train then saw why just 34 passengers are allowed, Trek Trendy&amp;quot;:\nE               - /url: https://www.msn.com/en-in/travel/rail-travel/he-finally-got-onto-japan-s-lottery-only-luxury-train-then-saw-why-just-34-passengers-are-allowed/vi-AA2bpzDU\nE               - text: He finally got onto Japan\u2019s lottery-only luxury train then saw why just 34 passengers are allowed\nE             - button &amp;quot;35 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/travel/rail-travel/he-finally-got-onto-japan-s-lottery-only-luxury-train-then-saw-why-just-34-passengers-are-allowed/vi-AA2bpzDU#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;Inside a 1,000-year-old French castle rebuilt into a luxury mansion&amp;quot;:\nE             - text: The Luxury Home Show 4d\nE             - link &amp;quot;Inside a 1,000-year-old French castle rebuilt into a luxury mansion, The Luxury Home Show&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/inside-a-1-000-year-old-french-castle-rebuilt-into-a-luxury-mansion/vi-AA27tfGI\nE               - text: Inside a 1,000-year-old French castle rebuilt into a luxury mansion\nE             - button &amp;quot;48 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/inside-a-1-000-year-old-french-castle-rebuilt-into-a-luxury-mansion/vi-AA27tfGI#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article\nE           - article:\nE             - img &amp;quot;ICC&amp;quot;\nE             - link &amp;quot;ICC&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/cricket-internationals?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE               - heading &amp;quot;ICC&amp;quot; [level=2]\nE             - button &amp;quot;More interests&amp;quot;\nE             - button &amp;quot;Live now&amp;quot;\nE             - button &amp;quot;More options&amp;quot;\nE             - link &amp;quot;IND 172/4 (30.0) Live WI IND elected to bat&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/cricket-internationals/game-center/sp-id-270272?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE               - text: IND\nE               - button &amp;quot;Click to follow IND&amp;quot;:\nE                 - img\nE               - text: 172/4 (30.0) Live WI\nE               - button &amp;quot;Click to follow WI&amp;quot;:\nE                 - img\nE               - text: IND elected to bat\nE             - link &amp;quot;PAK 192/6 (20.0) VS IND 211/6 (20.0) IND won by 19 runs&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/cricket-internationals/game-center/sp-id-274310?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE               - text: PAK\nE               - button &amp;quot;Click to follow PAK&amp;quot;:\nE                 - img\nE               - text: 192/6 (20.0) VS\nE               - img\nE               - text: IND\nE               - button &amp;quot;Click to follow IND&amp;quot;:\nE                 - img\nE               - text: 211/6 (20.0) IND won by 19 runs\nE             - link &amp;quot;BAN 102 (17.3) VS SL 165/9 (20.0) SL won by 63 runs&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/cricket-internationals/game-center/sp-id-274309?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE               - text: BAN\nE               - button &amp;quot;Click to follow BAN&amp;quot;:\nE                 - img\nE               - text: 102 (17.3) VS\nE               - img\nE               - text: SL\nE               - button &amp;quot;Click to follow SL&amp;quot;:\nE                 - img\nE               - text: 165/9 (20.0) SL won by 63 runs\nE             - button &amp;quot;Previous&amp;quot;\nE             - tablist:\nE               - tab &amp;quot;Page 1&amp;quot; [selected]\nE               - tab &amp;quot;Page 2&amp;quot;\nE               - tab &amp;quot;Page 3&amp;quot;\nE               - tab &amp;quot;Page 4&amp;quot;\nE               - tab &amp;quot;Page 5&amp;quot;\nE             - button &amp;quot;Next&amp;quot;\nE             - link &amp;quot;See more ICC&amp;quot;:\nE               - /url: https://www.msn.com/en-in/sports/cricket/cricket-internationals?ocid=BingHp01&amp;amp;cvid=475c894494aa4e6ad4bef8622079c214\nE           - article &amp;quot;G7 nations agree to release 100 million barrels of oil, including diesel, a boost for Trump&amp;quot;:\nE             - text: The Economic Times 7h\nE             - link &amp;quot;G7 nations agree to release 100 million barrels of oil, including diesel, a boost for Trump, The Economic Times&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/g7-nations-agree-to-release-100-million-barrels-of-oil-including-diesel-a-boost-for-trump/ar-AA2dqU1k\nE               - text: G7 nations agree to release 100 million barrels of oil, including diesel, a boost for Trump\nE             - button &amp;quot;14 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/g7-nations-agree-to-release-100-million-barrels-of-oil-including-diesel-a-boost-for-trump/ar-AA2dqU1k#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;The Cylons offer a peace treaty to the Twelve Colonies \u2013 Battlestar Galactica&amp;quot;:\nE             - text: Popcorn Picks\nE             - link &amp;quot;The Cylons offer a peace treaty to the Twelve Colonies \u2013 Battlestar Galactica, Popcorn Picks&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/the-cylons-offer-a-peace-treaty-to-the-twelve-colonies-battlestar-galactica/vi-AA26GAIj\nE               - text: The Cylons offer a peace treaty to the Twelve Colonies \u2013 Battlestar Galactica\nE             - button &amp;quot;57 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/the-cylons-offer-a-peace-treaty-to-the-twelve-colonies-battlestar-galactica/vi-AA26GAIj#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - &amp;#x27;article &amp;quot;Quote of the day by Stephen Hawking: \\&amp;quot;The greatest enemy of knowledge is not ignorance, it is\u2026\\&amp;quot;&amp;quot;&amp;#x27;:\nE             - text: The Times of India\nE             - &amp;#x27;link &amp;quot;Quote of the day by Stephen Hawking: \\&amp;quot;The greatest enemy of knowledge is not ignorance, it is\u2026\\&amp;quot;, The Times of India&amp;quot;&amp;#x27;:\nE               - /url: https://www.msn.com/en-in/news/other/quote-of-the-day-by-stephen-hawking-the-greatest-enemy-of-knowledge-is-not-ignorance-it-is/ar-AA24d8ki\nE               - text: &amp;quot;Quote of the day by Stephen Hawking: \\&amp;quot;The greatest enemy of knowledge is not ignorance, it is\u2026\\&amp;quot;&amp;quot;\nE             - button &amp;quot;957 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;View comments 7 Comment&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/quote-of-the-day-by-stephen-hawking-the-greatest-enemy-of-knowledge-is-not-ignorance-it-is/ar-AA24d8ki#comments\nE               - button &amp;quot;View comments 7 Comment&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - &amp;#x27;article &amp;quot;Avengers Endgame encore: Every Earth destroyed in post-credit multiverse collapse before doomsday&amp;quot;&amp;#x27;:\nE             - text: Times Now 3d\nE             - &amp;#x27;link &amp;quot;Avengers Endgame encore: Every Earth destroyed in post-credit multiverse collapse before doomsday, Times Now&amp;quot;&amp;#x27;:\nE               - /url: https://www.msn.com/en-in/entertainment/comics/avengers-endgame-encore-every-earth-destroyed-in-post-credit-multiverse-collapse-before-doomsday/ar-AA2dgeNz\nE               - text: &amp;quot;Avengers Endgame encore: Every Earth destroyed in post-credit multiverse collapse before doomsday&amp;quot;\nE             - button &amp;quot;63 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/comics/avengers-endgame-encore-every-earth-destroyed-in-post-credit-multiverse-collapse-before-doomsday/ar-AA2dgeNz#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;Steve Harvey loses his mind over Donald&amp;#x27;s answer!&amp;quot;:\nE             - text: Family Feud 1w\nE             - link &amp;quot;Steve Harvey loses his mind over Donald&amp;#x27;s answer!, Family Feud&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/celebrities/steve-harvey-loses-his-mind-over-donald-s-answer/vi-AA28BMun\nE               - text: Steve Harvey loses his mind over Donald&amp;#x27;s answer!\nE             - button &amp;quot;80 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/celebrities/steve-harvey-loses-his-mind-over-donald-s-answer/vi-AA28BMun#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;Watch the first wild hybrid bear ever discovered \u2013 it wasn&amp;#x27;t what anyone expected&amp;quot;:\nE             - text: Real Science 1w\nE             - link &amp;quot;Watch the first wild hybrid bear ever discovered \u2013 it wasn&amp;#x27;t what anyone expected, Real Science&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/watch-the-first-wild-hybrid-bear-ever-discovered-it-wasn-t-what-anyone-expected/vi-AA27CVxc\nE               - text: Watch the first wild hybrid bear ever discovered \u2013 it wasn&amp;#x27;t what anyone expected\nE             - button &amp;quot;1,391 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/watch-the-first-wild-hybrid-bear-ever-discovered-it-wasn-t-what-anyone-expected/vi-AA27CVxc#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - &amp;#x27;article &amp;quot;Explanation for every food: Ajith Kumar\u2019s nutritionist reveals the actor\u2019s family secrets to disciplined eating&amp;quot;&amp;#x27;:\nE             - text: The Indian Express\nE             - &amp;#x27;link &amp;quot;Explanation for every food: Ajith Kumar\u2019s nutritionist reveals the actor\u2019s family secrets to disciplined eating, The Indian Express&amp;quot;&amp;#x27;:\nE               - /url: https://www.msn.com/en-in/entertainment/general/explanation-for-every-food-ajith-kumar-s-nutritionist-reveals-the-actor-s-family-secrets-to-disciplined-eating/ar-AA22dsYO\nE               - text: &amp;quot;Explanation for every food: Ajith Kumar\u2019s nutritionist reveals the actor\u2019s family secrets to disciplined eating&amp;quot;\nE             - button &amp;quot;761 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;View comments 1 Comment&amp;quot;:\nE               - /url: https://www.msn.com/en-in/entertainment/general/explanation-for-every-food-ajith-kumar-s-nutritionist-reveals-the-actor-s-family-secrets-to-disciplined-eating/ar-AA22dsYO#comments\nE               - button &amp;quot;View comments 1 Comment&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE           - article &amp;quot;They sat down with Chinese newspapers... then locals started watching&amp;quot;:\nE             - text: Xiaomanyc.\nE             - link &amp;quot;They sat down with Chinese newspapers... then locals started watching, Xiaomanyc.&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/they-sat-down-with-chinese-newspapers-then-locals-started-watching/vi-AA2azqFo\nE               - text: They sat down with Chinese newspapers... then locals started watching\nE             - button &amp;quot;25 Likes&amp;quot;\nE             - button &amp;quot;Dislike&amp;quot;\nE             - link &amp;quot;Start the conversation&amp;quot;:\nE               - /url: https://www.msn.com/en-in/news/other/they-sat-down-with-chinese-newspapers-then-locals-started-watching/vi-AA2azqFo#comments\nE               - button &amp;quot;Start the conversation&amp;quot;:\nE                 - img\nE             - button &amp;quot;Hide this story&amp;quot;\nE             - button &amp;quot;See more&amp;quot;\nE       - contentinfo:\nE         - text: \u00a9 2026 Microsoft\nE         - list:\nE           - listitem:\nE             - link &amp;quot;Privacy and Cookies&amp;quot;:\nE               - /url: //go.microsoft.com/fwlink/?LinkId=521839\nE           - listitem:\nE             - link &amp;quot;Legal&amp;quot;:\nE               - /url: //go.microsoft.com/fwlink/?LinkID=246338\nE           - listitem:\nE             - link &amp;quot;Advertise&amp;quot;:\nE               - /url: //go.microsoft.com/fwlink/?linkid=868923\nE           - listitem:\nE             - link &amp;quot;About our ads&amp;quot;:\nE               - /url: //go.microsoft.com/fwlink/?LinkID=286759\nE           - listitem:\nE             - link &amp;quot;Help&amp;quot;:\nE               - /url: //support.microsoft.com/topic/82d20721-2d6f-4012-a13d-d1910ccf203f\nE           - listitem:\nE             - link &amp;quot;Feedback&amp;quot;:\nE               - /url: &amp;quot;#&amp;quot;\nE       - dialog &amp;quot;Quick Search&amp;quot;\n\nreportshtml\\test_sample.py:12: AssertionError\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;myreport.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>
